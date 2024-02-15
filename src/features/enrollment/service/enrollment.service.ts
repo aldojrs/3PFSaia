@@ -1,61 +1,43 @@
 import { Injectable } from '@angular/core';
 import { Enrollment } from '../models';
-import { Observable, delay, of } from 'rxjs';
+import { Observable, delay, mergeMap, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
     providedIn: 'root'
 })
 export class EnrollmentService {
 
-    enrollments: Enrollment[] = [
-        {
-            id: 1,
-            studentId: 1,
-            courseId: 1,
-            date: new Date().setFullYear(2023, 5, 12),
-        },
-        {
-            id: 2,
-            studentId: 1,
-            courseId: 2,
-            date: new Date().setFullYear(2023, 0, 10),
-        },
-        {
-            id: 3,
-            studentId: 2,
-            courseId: 3,
-            date: new Date().setFullYear(2023, 2, 25),
-        },
-        {
-            id: 4,
-            studentId: 2,
-            courseId: 4,
-            date: new Date().setFullYear(2023, 8, 8),
-        },
-        {
-            id: 5,
-            studentId: 3,
-            courseId: 1,
-            date: new Date().setFullYear(2023, 4, 30),
-        },
-        {
-            id: 6,
-            studentId: 3,
-            courseId: 3,
-            date: new Date().setFullYear(2023, 6, 24),
-        },
-    ];
+    constructor(private httpClient: HttpClient) { }
 
-    getEnrollmentsByStudentId(studentId: number): Observable<Enrollment[]> {
-        return of(this.enrollments.filter(e => e.studentId === studentId)).pipe(delay(1000));
+    enroll(enrollment: Enrollment): Observable<Enrollment> {
+        enrollment.date = new Date();
+        return this.httpClient.post<Enrollment>(`http://localhost:3000/enrollments`, enrollment);
     }
 
-    getEnrollmentsByCourseId(courseId: number): Observable<Enrollment[]> {
-        return of(this.enrollments.filter(e => e.courseId === courseId)).pipe(delay(1000));
+    getEnrollments(): Observable<Enrollment[]> {
+        return this.httpClient.get<Enrollment[]>(`http://localhost:3000/enrollments`);
     }
 
-    unenroll(studentId: number, courseId: number): void {
-        this.enrollments = this.enrollments.filter(e => !(e.studentId === studentId && e.courseId === courseId));
+    getEnrollmentsByStudentId(studentId: string): Observable<Enrollment[]> {
+        return this.httpClient.get<Enrollment[]>(`http://localhost:3000/enrollments?studentId=${studentId}`);
+    }
+
+    getEnrollmentsByCourseId(courseId: string): Observable<Enrollment[]> {
+        return this.httpClient.get<Enrollment[]>(`http://localhost:3000/enrollments?courseId=${courseId}`);
+    }
+
+    getEnrollmentByCourseIdAndStudentId(courseId: string, studentId: string): Observable<Enrollment[]> {
+        return this.httpClient.get<Enrollment[]>(`http://localhost:3000/enrollments?courseId=${courseId}&studentId=${studentId}`);
+    }
+
+    unenroll(studentId: string, courseId: string): Observable<Enrollment> {
+        return this.getEnrollmentByCourseIdAndStudentId(courseId, studentId)
+            .pipe(
+                mergeMap((enrollments) => {
+                    return this.httpClient.delete<Enrollment>(`http://localhost:3000/enrollments/${enrollments[0].id}`);
+                })
+            );
     }    
 
 }

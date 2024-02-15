@@ -7,6 +7,7 @@ import { ConfirmationDialogComponent } from '../../shared/dialogs/confirmation-d
 import { StudentService } from './service/student.service';
 import { StudentDetailComponent } from './dialogs/student-detail/student-detail.component';
 import { LoadingService } from '../../core/services/loading.service';
+import { LoginService } from '../login/service/login.service';
 
 @Component({
     selector: 'app-student',
@@ -17,10 +18,16 @@ export class StudentComponent implements OnInit {
     displayedColumns: string[] = ['id', 'fullName', 'documentNro', 'email', 'registrationDate', 'actions'];
     dataSource!: Student[];
 
+    isUserAdmin: boolean = false;
+
     constructor(private studentService: StudentService, private loadingService: LoadingService, 
-        private dialog: MatDialog, private _snackBar: MatSnackBar) { }
+        private loginService: LoginService, private dialog: MatDialog, private _snackBar: MatSnackBar) { }
 
     ngOnInit(): void {
+        this.loginService.isUserAdmin().subscribe((isAdmin) => {
+            this.isUserAdmin = isAdmin;
+        });
+
         this.loadData();
     }
 
@@ -52,8 +59,8 @@ export class StudentComponent implements OnInit {
             if (student) { // If the student is not null, it means that we are editing an existing student
                 const studentEdited = { ...student, ...result };
                 this.studentService.editStudent(studentEdited).subscribe({
-                    next: (result) => {
-                        this.dataSource = result;
+                    next: (student) => {
+                        this.dataSource = this.update(this.dataSource, student.id, student);
                         this.loadingService.setIsLoading(false);
                         this._snackBar.open('Alumno actualizado correctamente', 'Ok', { duration: 3000 });
                     },
@@ -64,8 +71,8 @@ export class StudentComponent implements OnInit {
                 });
             } else { // If the student is null, it means that we are creating a new student
                 this.studentService.addStudent(result).subscribe({
-                    next: (result) => {
-                        this.dataSource = result;
+                    next: (student) => {
+                        this.dataSource = [...this.dataSource, ...[student]];
                         this.loadingService.setIsLoading(false)
                         this._snackBar.open('Alumno agregado correctamente', 'Ok', { duration: 3000 });
                     },
@@ -76,6 +83,10 @@ export class StudentComponent implements OnInit {
                 });
             }
         });
+    }
+
+    update(students: Student[], id: string, updatedStudent: Partial<Student>): Student[] {
+        return students.map((student) => (student.id === id ? { ...student, ...updatedStudent } : student))
     }
 
     deleteStudent(student: Student) {
@@ -92,8 +103,8 @@ export class StudentComponent implements OnInit {
         dialogRef.afterClosed().subscribe((confirmed: boolean) => {
             if (confirmed) {
                 this.loadingService.setIsLoading(true);
-                this.studentService.deleteStudent(student.id).subscribe((result) => {
-                    this.dataSource = result;
+                this.studentService.deleteStudent(student.id).subscribe((student) => {
+                    this.dataSource = this.dataSource.filter(e => e.id !== student.id);
                     this.loadingService.setIsLoading(false)
                     this._snackBar.open('Alumno eliminado correctamente', 'Ok', { duration: 3000 });
                 });

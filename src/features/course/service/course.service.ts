@@ -3,84 +3,48 @@ import { Course } from '../models';
 import { Observable, delay, forkJoin, map, mergeMap, of } from 'rxjs';
 import { Enrollment } from '../../enrollment/models';
 import { EnrollmentService } from '../../enrollment/service/enrollment.service';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CourseService {
 
-    courses: Course[] = [
-        {
-            id: 1,
-            name: 'Curso de Angular avanzado',
-            description: 'En este curso veras a fondo el framework de Angular',
-            dateFrom: new Date(2024, 2, 1),
-            dateTo: new Date(2024, 11, 30),
-        },
-        {
-            id: 2,
-            name: 'Curso de React',
-            description: 'Aprende a construir aplicaciones web con React',
-            dateFrom: new Date(2024, 5, 1),
-            dateTo: new Date(2024, 8, 30),
-        },
-        {
-            id: 3,
-            name: 'Curso de Vue.js',
-            description: 'Descubre el poder de Vue.js en el desarrollo web',
-            dateFrom: new Date(2024, 9, 1),
-            dateTo: new Date(2024, 11, 31),
-        },
-        {
-            id: 4,
-            name: 'Curso de Python',
-            description: 'Aprende a programar en Python desde cero',
-            dateFrom: new Date(2024, 3, 1),
-            dateTo: new Date(2024, 6, 30),
-        }
-    ];
-
-    constructor(private enrollmentService: EnrollmentService) { }
+    constructor(private enrollmentService: EnrollmentService, private httpClient: HttpClient) { }
 
     getCourses(): Observable<Course[]> {
-        return of(this.courses).pipe(delay(1000));
+        return this.httpClient.get<Course[]>(`http://localhost:3000/courses`);
     }
 
-    getCoursesByStudentId(studentId: number): Observable<Course[]> {
+    getCoursesByStudentId(studentId: string): Observable<Course[]> {
         return this.enrollmentService.getEnrollmentsByStudentId(studentId).pipe(
             mergeMap((enrollments: Enrollment[]) => {
+                if (enrollments.length === 0) {
+                    return of([]);
+                }
                 const courseIds = enrollments.map((enrollment) => enrollment.courseId);
                 return this.getCoursesByIds(courseIds);
             })
         );
     }
 
-    getCoursesByIds(courseIds: number[]): Observable<Course[]> {
-        return of(this.courses.filter(course => courseIds.includes(course.id))).pipe(delay(1000));
+    getCoursesByIds(courseIds: string[]): Observable<Course[]> {
+        return this.getCourses().pipe(
+            map((courses) => {
+                return courses.filter((course) => courseIds.includes(course.id));
+            })
+        );
     }
 
-    addCourse(course: Course): Observable<Course[]> {
-        course.id = this.getUniqueId();
-        this.courses = [...this.courses, course];
-
-        return this.getCourses();
+    addCourse(course: Course): Observable<Course> {
+        return this.httpClient.post<Course>(`http://localhost:3000/courses`, course);
     }
 
-    private getUniqueId(): number {
-        const maxId = Math.max(...this.courses.map(c => c.id));
-        return maxId + 1;
+    editCourse(course: Course): Observable<Course> {
+        return this.httpClient.put<Course>(`http://localhost:3000/courses/${course.id}`, course);
     }
 
-    editCourse(course: Course): Observable<Course[]> {
-        this.courses = this.courses.filter(c => c.id !== course.id);
-        this.courses = [...this.courses, course];
-        this.courses.sort((a, b) => a.id - b.id);
-
-        return this.getCourses();
-    }
-
-    deleteCourse(courseId: number): Observable<Course[]> {
-        this.courses = this.courses.filter((c) => c.id !== courseId);
-        return this.getCourses();
+    deleteCourse(courseId: string): Observable<Course> {
+        return this.httpClient.delete<Course>(`http://localhost:3000/courses/${courseId}`);
     }
 }

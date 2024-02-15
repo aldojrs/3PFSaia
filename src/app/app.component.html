@@ -1,16 +1,15 @@
-
 <div class="loading" *ngIf="isLoading">
     <mat-spinner></mat-spinner>
 </div>
 
 <mat-toolbar color="primary">
-    <button mat-icon-button aria-label="Menu icon" (click)="toggleMenu()">
+    <button *ngIf="isUserLogged" mat-icon-button aria-label="Menu icon" (click)="toggleMenu()">
         <mat-icon>menu</mat-icon>
     </button>
-    <h1>Curso Angular - Segunda entrega</h1>
+    <h1>Curso Angular - Tercera entrega</h1>
 </mat-toolbar>
 
-<mat-sidenav-container autosize>
+<mat-sidenav-container autosize *ngIf="isUserLogged">
     <mat-sidenav [opened]="true" mode="side">
         <mat-nav-list>
             <a mat-list-item #homeLink="routerLinkActive" routerLinkActive [activated]="homeLink.isActive"
@@ -34,17 +33,24 @@
                     <span>Cursos</span>
                 </span>
             </a>
-            <!-- Para este entregable, inscripciones no está incluido -->
-            <!-- <a mat-list-item #enrollmentLink="routerLinkActive" routerLinkActive [activated]="enrollmentLink.isActive"
+            <a mat-list-item #enrollmentLink="routerLinkActive" routerLinkActive [activated]="enrollmentLink.isActive"
                 routerLink="enrollment">
                 <span class="entry">
                     <mat-icon>assignment_turned_in</mat-icon>
                     <span>Inscripciones</span>
                 </span>
-            </a> -->
+            </a>
+            <a mat-list-item (click)="logout()">
+                <span class="entry">
+                    <mat-icon>logout</mat-icon>
+                    <span>Logout</span>
+                </span>
+            </a>
         </mat-nav-list>
     </mat-sidenav>
     <mat-sidenav-content>
         <router-outlet></router-outlet>
     </mat-sidenav-content>
 </mat-sidenav-container>
+
+<router-outlet *ngIf="!isUserLogged"></router-outlet>

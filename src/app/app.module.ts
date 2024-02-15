@@ -8,6 +8,7 @@ import { MaterialModule } from '../material/material.module';
 import es from '@angular/common/locales/es';
 import esAR from '@angular/common/locales/es-AR';
 import { registerLocaleData } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
 
 registerLocaleData(es);
 registerLocaleData(esAR);
@@ -21,6 +22,7 @@ registerLocaleData(esAR);
         BrowserAnimationsModule,
         AppRoutingModule,
         MaterialModule,
+        HttpClientModule,
     ],
     providers: [
         {

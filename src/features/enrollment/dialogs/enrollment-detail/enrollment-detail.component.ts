@@ -1,17 +1,17 @@
 import { Component, Inject } from '@angular/core';
 import { Student } from '../../../student/models';
-import { Course } from '../../models';
 import { LoadingService } from '../../../../core/services/loading.service';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { StudentService } from '../../../student/service/student.service';
-import { EnrollmentService } from '../../../enrollment/service/enrollment.service';
+import { EnrollmentService } from '../../service/enrollment.service';
 import { ConfirmationDialogComponent } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.component';
+import { Course } from '../../../course/models';
 
 @Component({
-    selector: 'app-course-detail',
-    templateUrl: './course-detail.component.html',
+    selector: 'app-enrollment-detail',
+    templateUrl: './enrollment-detail.component.html',
 })
-export class CourseDetailComponent {
+export class EnrollmentDetailComponent {
 
     displayedColumns: string[] = ['id', 'fullName', 'documentNro', 'email', 'registrationDate', 'actions'];
     dataSource!: Student[];
